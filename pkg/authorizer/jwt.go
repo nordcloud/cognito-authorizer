@@ -8,40 +8,40 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
 	"net/http"
 
-	ncerrors "bitbucket.org/nordcloud/rnd-toolkit-go/errors"
-
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-// IDTokenClaims represents claims stored in jw token
+// BaseTokenClaims is a common structure for token data.
+type BaseTokenClaims struct {
+	TokenUse string `json:"token_use"`
+	jwt.StandardClaims
+}
+
+// IDTokenClaims represents claims stored in ID type JW token
 type IDTokenClaims struct {
 	EmailVerified   bool   `json:"email_verified"`
-	TokenUse        string `json:"token_use"`
 	AuthTime        int64  `json:"auth_time"`
 	CognitoUsername string `json:"cognito:username"`
 	GivenName       string `json:"given_name"`
 	Email           string `json:"email"`
-	jwt.StandardClaims
+	BaseTokenClaims
 }
 
+// AccessTokenClaims represents claims stored in Access type JW token.
 type AccessTokenClaims struct {
 	AuthTime int64  `json:"auth_time"`
-	Exp      int64  `json:"exp"`
-	Iat      int64  `json:"iat"`
-	Iss      string `json:"iss"`
 	Scope    string `json:"scope"`
-	Sub      string `json:"sub"`
-	TokenUse string `json:"token_use"`
 	Username string `json:"username"`
-	jwt.StandardClaims
+	BaseTokenClaims
 }
 
-// JWKey struct holds information about json web key
+// JWKey struct holds information about JSON web key
 type JWKey struct {
 	Algorithm string `json:"alg"`
 	Exponent  string `json:"e"`
@@ -51,18 +51,20 @@ type JWKey struct {
 	Use       string `json:"use"`
 }
 
-const cognitoKeyRetrieveURL = "https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json"
+const cognitoKeyRetrieveURLTemplate = "https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json"
 
 type jwkResponse struct {
 	Keys []JWKey `json:"keys"`
 }
 
-// GetCognitoKeysURL build URL to retrieve Cognito keys.
-func GetCognitoKeysURL(region, userPoolID string) string {
-	return fmt.Sprintf(cognitoKeyRetrieveURL, region, userPoolID)
+// GetDecryptionKeys gets jw token description keys from external service.
+func GetDecryptionKeys(region, userPoolID string) ([]JWKey, error) {
+	url := fmt.Sprintf(cognitoKeyRetrieveURLTemplate, region, userPoolID)
+	return RequestKeys(url)
 }
 
-func GetDecryptionKeys(url string) ([]JWKey, error) {
+// RequestKeys retrieves decryption keys from external service.
+func RequestKeys(url string) ([]JWKey, error) {
 	response, err := http.Get(url)
 
 	if err != nil {
@@ -82,9 +84,16 @@ func GetDecryptionKeys(url string) ([]JWKey, error) {
 		return nil, err
 	}
 
+	for _, key := range tokenResponse.Keys {
+		if key.KeyType != "RSA" {
+			return nil, errors.New("key type is not an RSA")
+		}
+	}
+
 	return tokenResponse.Keys, nil
 }
 
+// getDecryptionKey searches for key by ID in list of keys.
 func getDecryptionKey(keys []JWKey, keyID string) (*JWKey, error) {
 	for _, jwt := range keys {
 		if jwt.KeyID == keyID {
@@ -92,26 +101,26 @@ func getDecryptionKey(keys []JWKey, keyID string) (*JWKey, error) {
 		}
 	}
 
-	return nil, ncerrors.New("key not found", ncerrors.Fields{})
+	return nil, fmt.Errorf("%s key not found", keyID)
 }
 
 func getKeyForToken(keys []JWKey) func(token *jwt.Token) (interface{}, error) {
 	f := func(token *jwt.Token) (interface{}, error) {
 		keyID, ok := token.Header["kid"].(string)
 		if !ok {
-			return nil, ncerrors.New("kid is not a string", ncerrors.Fields{})
+			return nil, errors.New("key id is not a string")
 		}
 
 		jwk, err := getDecryptionKey(keys, keyID)
 
 		if err != nil {
-			return nil, ncerrors.WithContext(err, "fetching decryption key error", ncerrors.Fields{})
+			return nil, err
 		}
 
 		pemString, err := convertJWKtoPEMString(*jwk)
 
 		if err != nil {
-			return nil, ncerrors.WithContext(err, "converting decryption key to PEM error", ncerrors.Fields{})
+			return nil, err
 		}
 
 		return jwt.ParseRSAPublicKeyFromPEM([]byte(*pemString))
@@ -119,6 +128,7 @@ func getKeyForToken(keys []JWKey) func(token *jwt.Token) (interface{}, error) {
 	return f
 }
 
+// GetIDClaims returns claims from ID type token payload.
 func GetIDClaims(encodedToken string, keys []JWKey, claims *IDTokenClaims) error {
 	_, err := jwt.ParseWithClaims(encodedToken, claims, getKeyForToken(keys))
 	if err != nil {
@@ -128,6 +138,7 @@ func GetIDClaims(encodedToken string, keys []JWKey, claims *IDTokenClaims) error
 	return nil
 }
 
+// GetAccessClaims returns claims from Access type token payload.
 func GetAccessClaims(encodedToken string, keys []JWKey, claims *AccessTokenClaims) error {
 	_, err := jwt.ParseWithClaims(encodedToken, claims, getKeyForToken(keys))
 
@@ -138,7 +149,8 @@ func GetAccessClaims(encodedToken string, keys []JWKey, claims *AccessTokenClaim
 	return nil
 }
 
-func GetStandardClaims(encodedToken string, keys []JWKey, claims *jwt.StandardClaims) error {
+// GetStandardClaims returns claims from standard type token payload.
+func GetBaseClaims(encodedToken string, keys []JWKey, claims *BaseTokenClaims) error {
 	_, err := jwt.ParseWithClaims(encodedToken, claims, getKeyForToken(keys))
 
 	if err != nil {
@@ -148,6 +160,7 @@ func GetStandardClaims(encodedToken string, keys []JWKey, claims *jwt.StandardCl
 	return nil
 }
 
+// converts JWK key type to PEM key type.
 func convertJWKtoPEMString(jwk JWKey) (*string, error) {
 	nb, err := base64.RawURLEncoding.DecodeString(jwk.N)
 	if err != nil {
@@ -160,7 +173,7 @@ func convertJWKtoPEMString(jwk JWKey) (*string, error) {
 	}
 
 	if len(eb) > 4 {
-		return nil, ncerrors.New("e is not a uint32", ncerrors.Fields{"e": eb})
+		return nil, errors.New("e is not a uint32")
 	}
 
 	// if byte array has less than four items we need to add leading zeros to match uint32 byte lengths
