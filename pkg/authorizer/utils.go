@@ -35,8 +35,7 @@ KGnN0M08uvAI8cj3D86h+45gvkVV+ghB+MNh7uStVW5UNyiqPPqtCecm2YTenpnP
 bsPcF5WhzjCGzwujQaYtl5tySIWj1+wfiCzBq55jk5Tr74bWu8j1isg=
 -----END RSA PRIVATE KEY-----`
 
-// CreateTestKeys helper function for testing purposes.
-func CreateTestKeys() []JWKey {
+func createTestKeys() []JWKey {
 	return []JWKey{
 		JWKey{
 			Algorithm: "RS256",
@@ -57,8 +56,7 @@ func CreateTestKeys() []JWKey {
 	}
 }
 
-// CreateTestBaseToken is a helper function for testing.
-func CreateTestBaseToken(tokenUse, subject, audience string, expiresAt *time.Time) string {
+func createTestBaseToken(tokenUse, subject, audience string, expiresAt *time.Time) string {
 	claims := BaseTokenClaims{
 		TokenUse: tokenUse,
 	}
@@ -78,8 +76,7 @@ func CreateTestBaseToken(tokenUse, subject, audience string, expiresAt *time.Tim
 	return tokenString
 }
 
-// CreateTestIDToken is a helper function for testing purposes.
-func CreateTestIDToken(username, subject, audience string, expiresAt *time.Time) string {
+func createTestIDToken(username, subject, audience string, expiresAt *time.Time) string {
 	claims := IDTokenClaims{
 		Email: username,
 	}
@@ -100,8 +97,7 @@ func CreateTestIDToken(username, subject, audience string, expiresAt *time.Time)
 	return tokenString
 }
 
-// CreateTestAccessToken is a helper function for testing purposes.
-func CreateTestAccessToken(scope, subject string, expiresAt *time.Time) string {
+func createTestAccessToken(scope, subject string, expiresAt *time.Time) string {
 	claims := AccessTokenClaims{
 		Scope: scope,
 	}

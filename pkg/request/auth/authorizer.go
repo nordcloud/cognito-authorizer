@@ -10,6 +10,7 @@ import (
 	"net/http"
 )
 
+// HeaderAdder is an interface to setup Authorization HTTP header.
 type HeaderAdder interface {
 	Add(key, value string)
 }

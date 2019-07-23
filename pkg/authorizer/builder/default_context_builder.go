@@ -3,7 +3,7 @@ package builder
 import (
 	"strings"
 
-	"bitbucket.org/nordcloud/cognito-authorizer/pkg/authorizer"
+	"github.com/nordcloud/cognito-authorizer/pkg/authorizer"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,4 +61,9 @@ func (c *DefaultContextBuilder) buildContextForIDClaims(claims authorizer.IDToke
 	return map[string]interface{}{
 		"email": claims.Email,
 	}, nil
+}
+
+func getScopeFromFullString(scopeString string) string {
+	segments := strings.Split(scopeString, "/")
+	return segments[len(segments)-1]
 }

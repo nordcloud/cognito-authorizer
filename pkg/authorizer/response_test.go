@@ -12,12 +12,12 @@ func TestBuildResponseOk(t *testing.T) {
 	testEmail := "test@example.com"
 	testSubject := "test-subject"
 	testAudience := "test-audience"
-	testKeys := CreateTestKeys()
-	token := CreateTestIDToken(testEmail, testSubject, testAudience, nil)
+	testKeys := createTestKeys()
+	token := createTestIDToken(testEmail, testSubject, testAudience, nil)
 
-	policyBuilderMock := new(PolicyBuilderMock)
+	policyBuilderMock := new(policyBuilderMock)
 	policyBuilderMock.On("BuildPolicy", token).Return(events.APIGatewayCustomAuthorizerPolicy{}, nil).Once()
-	contextBuilderMock := new(ContextBuilderMock)
+	contextBuilderMock := new(contextBuilderMock)
 	contextBuilderMock.On("BuildContext", token).Return(map[string]interface{}{}, nil).Once()
 
 	responseBuilder := ResponseBuilder{
@@ -42,13 +42,13 @@ func TestBuildResponseOk(t *testing.T) {
 }
 
 func TestBuildResponsePolicyBuilderError(t *testing.T) {
-	testKeys := CreateTestKeys()
+	testKeys := createTestKeys()
 	testAudience := "test-audience"
-	token := CreateTestIDToken("", "", testAudience, nil)
+	token := createTestIDToken("", "", testAudience, nil)
 
-	policyBuilderMock := new(PolicyBuilderMock)
+	policyBuilderMock := new(policyBuilderMock)
 	policyBuilderMock.On("BuildPolicy", token).Return(events.APIGatewayCustomAuthorizerPolicy{}, errors.New("error")).Once()
-	contextBuilderMock := new(ContextBuilderMock)
+	contextBuilderMock := new(contextBuilderMock)
 
 	responseBuilder := ResponseBuilder{
 		Context: &Context{
@@ -68,13 +68,13 @@ func TestBuildResponsePolicyBuilderError(t *testing.T) {
 }
 
 func TestBuildResponseContextBuilderError(t *testing.T) {
-	testKeys := CreateTestKeys()
+	testKeys := createTestKeys()
 	testAudience := "test-audience"
-	token := CreateTestIDToken("", "", testAudience, nil)
+	token := createTestIDToken("", "", testAudience, nil)
 
-	policyBuilderMock := new(PolicyBuilderMock)
+	policyBuilderMock := new(policyBuilderMock)
 	policyBuilderMock.On("BuildPolicy", token).Return(events.APIGatewayCustomAuthorizerPolicy{}, nil).Once()
-	contextBuilderMock := new(ContextBuilderMock)
+	contextBuilderMock := new(contextBuilderMock)
 	contextBuilderMock.On("BuildContext", token).Return(map[string]interface{}{}, errors.New("error")).Once()
 
 	responseBuilder := ResponseBuilder{
@@ -95,10 +95,10 @@ func TestBuildResponseContextBuilderError(t *testing.T) {
 }
 
 func TestBuildResponseBadToken(t *testing.T) {
-	testKeys := CreateTestKeys()
+	testKeys := createTestKeys()
 	token := "bad-token"
-	policyBuilderMock := new(PolicyBuilderMock)
-	contextBuilderMock := new(ContextBuilderMock)
+	policyBuilderMock := new(policyBuilderMock)
+	contextBuilderMock := new(contextBuilderMock)
 
 	responseBuilder := ResponseBuilder{
 		Context: &Context{
@@ -117,10 +117,10 @@ func TestBuildResponseBadToken(t *testing.T) {
 }
 
 func TestBuildResponseDescryptionKeysNotFound(t *testing.T) {
-	token := CreateTestIDToken("", "", "", nil)
+	token := createTestIDToken("", "", "", nil)
 
-	policyBuilderMock := new(PolicyBuilderMock)
-	contextBuilderMock := new(ContextBuilderMock)
+	policyBuilderMock := new(policyBuilderMock)
+	contextBuilderMock := new(contextBuilderMock)
 
 	responseBuilder := ResponseBuilder{
 		Context: &Context{
@@ -142,11 +142,11 @@ func TestBuildResponseTokenAudienceError(t *testing.T) {
 	testEmail := "test@example.com"
 	testSubject := "test-subject"
 	testAudience := "test-audience"
-	testKeys := CreateTestKeys()
-	token := CreateTestIDToken(testEmail, testSubject, testAudience, nil)
+	testKeys := createTestKeys()
+	token := createTestIDToken(testEmail, testSubject, testAudience, nil)
 
-	policyBuilderMock := new(PolicyBuilderMock)
-	contextBuilderMock := new(ContextBuilderMock)
+	policyBuilderMock := new(policyBuilderMock)
+	contextBuilderMock := new(contextBuilderMock)
 
 	responseBuilder := ResponseBuilder{
 		Context: &Context{
@@ -169,12 +169,12 @@ func TestBuildResponseTokenMultipeAudience(t *testing.T) {
 	testEmail := "test@example.com"
 	testSubject := "test-subject"
 	testAudience := "test-audience-1"
-	testKeys := CreateTestKeys()
-	token := CreateTestIDToken(testEmail, testSubject, testAudience, nil)
+	testKeys := createTestKeys()
+	token := createTestIDToken(testEmail, testSubject, testAudience, nil)
 
-	policyBuilderMock := new(PolicyBuilderMock)
+	policyBuilderMock := new(policyBuilderMock)
 	policyBuilderMock.On("BuildPolicy", token).Return(events.APIGatewayCustomAuthorizerPolicy{}, nil).Once()
-	contextBuilderMock := new(ContextBuilderMock)
+	contextBuilderMock := new(contextBuilderMock)
 	contextBuilderMock.On("BuildContext", token).Return(map[string]interface{}{}, nil).Once()
 
 	responseBuilder := ResponseBuilder{
@@ -202,11 +202,11 @@ func TestBuildResponseTokenMultipeAudienceError(t *testing.T) {
 	testEmail := "test@example.com"
 	testSubject := "test-subject"
 	testAudience := "test-audience-bad"
-	testKeys := CreateTestKeys()
-	token := CreateTestIDToken(testEmail, testSubject, testAudience, nil)
+	testKeys := createTestKeys()
+	token := createTestIDToken(testEmail, testSubject, testAudience, nil)
 
-	policyBuilderMock := new(PolicyBuilderMock)
-	contextBuilderMock := new(ContextBuilderMock)
+	policyBuilderMock := new(policyBuilderMock)
+	contextBuilderMock := new(contextBuilderMock)
 
 	responseBuilder := ResponseBuilder{
 		Context: &Context{

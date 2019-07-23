@@ -41,7 +41,7 @@ type AccessTokenClaims struct {
 	BaseTokenClaims
 }
 
-// JWKey struct holds information about JSON web key
+// JWKey struct holds information about JSON web key.
 type JWKey struct {
 	Algorithm string `json:"alg"`
 	Exponent  string `json:"e"`
@@ -57,7 +57,7 @@ type jwkResponse struct {
 	Keys []JWKey `json:"keys"`
 }
 
-// GetDecryptionKeys gets jw token description keys from external service.
+// GetDecryptionKeys gets JW token description keys from AWS Cognito service.
 func GetDecryptionKeys(region, userPoolID string) ([]JWKey, error) {
 	url := fmt.Sprintf(cognitoKeyRetrieveURLTemplate, region, userPoolID)
 	return RequestKeys(url)
@@ -128,7 +128,7 @@ func getKeyForToken(keys []JWKey) func(token *jwt.Token) (interface{}, error) {
 	return f
 }
 
-// GetIDClaims returns claims from ID type token payload.
+// GetIDClaims fills claims with ID type token data.
 func GetIDClaims(encodedToken string, keys []JWKey, claims *IDTokenClaims) error {
 	_, err := jwt.ParseWithClaims(encodedToken, claims, getKeyForToken(keys))
 	if err != nil {
@@ -138,7 +138,7 @@ func GetIDClaims(encodedToken string, keys []JWKey, claims *IDTokenClaims) error
 	return nil
 }
 
-// GetAccessClaims returns claims from Access type token payload.
+// GetAccessClaims fills claims with Access type token data.
 func GetAccessClaims(encodedToken string, keys []JWKey, claims *AccessTokenClaims) error {
 	_, err := jwt.ParseWithClaims(encodedToken, claims, getKeyForToken(keys))
 
@@ -149,7 +149,7 @@ func GetAccessClaims(encodedToken string, keys []JWKey, claims *AccessTokenClaim
 	return nil
 }
 
-// GetStandardClaims returns claims from standard type token payload.
+// GetStandardClaims fills claims with standard token type data.
 func GetBaseClaims(encodedToken string, keys []JWKey, claims *BaseTokenClaims) error {
 	_, err := jwt.ParseWithClaims(encodedToken, claims, getKeyForToken(keys))
 

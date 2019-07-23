@@ -52,6 +52,7 @@ func (s *CognitoM2MAuthorizer) AuthorizeRequest(request *http.Request) (*http.Re
 	return request, err
 }
 
+// AddAuthorizationHeader adds Authorization HTTP header.
 func (s *CognitoM2MAuthorizer) AddAuthorizationHeader(headerAdder HeaderAdder) error {
 	secret, err := s.getSecretKey()
 	if err != nil {

@@ -44,7 +44,7 @@ func TestGetDecryptionKey(t *testing.T) {
 	keys, err := RequestKeys(testServer.URL)
 
 	assert.Nil(t, err)
-	assert.Equal(t, CreateTestKeys(), keys)
+	assert.Equal(t, createTestKeys(), keys)
 }
 
 func TestGetDecryptionKeyNonRSAKeyError(t *testing.T) {
@@ -80,9 +80,9 @@ func TestGetDecryptionKeyNonRSAKeyError(t *testing.T) {
 func TestGetIDClaims(t *testing.T) {
 	testEmail := "test@example.com"
 	testSubject := "test-subject"
-	testKeys := CreateTestKeys()
+	testKeys := createTestKeys()
 	idClaims := &IDTokenClaims{}
-	token := CreateTestIDToken(testEmail, testSubject, "", nil)
+	token := createTestIDToken(testEmail, testSubject, "", nil)
 
 	err := GetIDClaims(token, testKeys, idClaims)
 
@@ -95,9 +95,9 @@ func TestGetIDClaimsExpired(t *testing.T) {
 	testEmail := "test@example.com"
 	testSubject := "test-subject"
 	expiresAt := time.Now().Add(-time.Hour)
-	testKeys := CreateTestKeys()
+	testKeys := createTestKeys()
 	idClaims := &IDTokenClaims{}
-	token := CreateTestIDToken(testEmail, testSubject, "", &expiresAt)
+	token := createTestIDToken(testEmail, testSubject, "", &expiresAt)
 
 	err := GetIDClaims(token, testKeys, idClaims)
 
@@ -107,9 +107,9 @@ func TestGetIDClaimsExpired(t *testing.T) {
 func TestGetAccessClaims(t *testing.T) {
 	testScope := "test-scope"
 	testSubject := "test-subject"
-	testKeys := CreateTestKeys()
+	testKeys := createTestKeys()
 	accessClaims := &AccessTokenClaims{}
-	token := CreateTestAccessToken(testScope, testSubject, nil)
+	token := createTestAccessToken(testScope, testSubject, nil)
 
 	err := GetAccessClaims(token, testKeys, accessClaims)
 
@@ -122,9 +122,9 @@ func TestGetBaseClaims(t *testing.T) {
 	testUse := "test-use"
 	testSubject := "test-subject"
 	testAudience := "test-audience"
-	testKeys := CreateTestKeys()
+	testKeys := createTestKeys()
 	baseClaims := &BaseTokenClaims{}
-	token := CreateTestBaseToken(testUse, testSubject, testAudience, nil)
+	token := createTestBaseToken(testUse, testSubject, testAudience, nil)
 
 	err := GetBaseClaims(token, testKeys, baseClaims)
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"bitbucket.org/nordcloud/cognito-authorizer/pkg/authorizer"
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/nordcloud/cognito-authorizer/pkg/authorizer"
 	log "github.com/sirupsen/logrus"
 )
 
