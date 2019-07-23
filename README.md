@@ -1,13 +1,13 @@
 # Cognito authorizer
-A golang package that abstracts out work with JSON web access/identity tokens for AWS API Gateway custom authorizer.
+A golang packages that abstract out work with JSON web access/identity tokens for AWS API Gateway custom authorizer.
 
-This package handles:
+These packages handle:
 
 - access, id and standard tokens
 - token verification
 - token payload decrypting (claims)
 - building proper responses from a custom authorizer
-
+- a M2M token signer helper
 
 You don't need to worry about JWT. The `GetIDClaims`, `GetAccessClaims` and `GetStandardClaims` will do the work for you, so you can focus only on building `APIGatewayCustomAuthorizerPolicy`.
 
