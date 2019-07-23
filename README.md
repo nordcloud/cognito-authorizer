@@ -6,14 +6,14 @@ This package handles:
 - access, id and standard tokens
 - token verification
 - token payload decrypting (claims)
-- buidling proper responses from custom authorizer
+- building proper responses from a custom authorizer
 
 
-You don't need to wory about JWT. The `GetIDClaims`, `GetAccessClaims` and `GetStandardClaims` will do the work for you, so you can focus only on building `APIGatewayCustomAuthorizerPolicy`.
+You don't need to worry about JWT. The `GetIDClaims`, `GetAccessClaims` and `GetStandardClaims` will do the work for you, so you can focus only on building `APIGatewayCustomAuthorizerPolicy`.
 
 
 ### About resource server context
-You can pass a context created by your custom authorier to resource server. This is done by satisfying ContextBuilder interface. The method should return a `map[string]interface{}` (this is how AWS golang SDK works) but keys and values in this map have to be *strings*. More info [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-authorizer-output.html).
+You can pass a context created by your custom authorizer to the resource server. This is done by satisfying ContextBuilder interface. The method should return a `map[string]interface{}` (this is how AWS golang SDK works) but keys and values in this map have to be *strings*. More info [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-authorizer-output.html).
 
 
 ## Example
@@ -24,14 +24,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
-    "strings"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	log "github.com/sirupsen/logrus"
 
-	cognitoAuthorizer "bitbucket.org/nordcloud/cognito-authorizer/pkg/authorizer"
+	cognitoAuthorizer "github.com/nordcloud/cognito-authorizer/pkg/authorizer"
 )
 
 type PolicyEffect string
@@ -79,8 +80,8 @@ func (b Policy) BuildContext(encodedToken string) (map[string]interface{}, error
 	accessClaims := &cognitoAuthorizer.AccessTokenClaims{}
 	err := cognitoAuthorizer.GetAccessClaims(encodedToken, b.Context.DecryptionKeys, accessClaims)
 	if err != nil {
-        return map[string]inter{}{}, err
-    }
+		return map[string]interface{}{}, err
+	}
 
 	context := map[string]interface{}{
 		"token_scope": accessClaims.Scope,
@@ -88,8 +89,6 @@ func (b Policy) BuildContext(encodedToken string) (map[string]interface{}, error
 
 	return context, nil
 }
-
-
 
 var (
 	sharedContext *cognitoAuthorizer.Context
@@ -126,7 +125,7 @@ func handler(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest
 	events.APIGatewayCustomAuthorizerResponse, error) {
 	log.WithField("method_arn", event.MethodArn).Info("Authorizer lambda invoked.")
 
-	policy := &authorizer.Policy{
+	policy := &Policy{
 		Context: sharedContext,
 	}
 
