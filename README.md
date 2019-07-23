@@ -11,6 +11,12 @@ This package handles:
 
 You don't need to worry about JWT. The `GetIDClaims`, `GetAccessClaims` and `GetStandardClaims` will do the work for you, so you can focus only on building `APIGatewayCustomAuthorizerPolicy`.
 
+### Docs
+
+- [authorizer](https://godoc.org/github.com/nordcloud/cognito-authorizer/pkg/authorizer#pkg-index)
+- [default builder](https://godoc.org/github.com/nordcloud/cognito-authorizer/pkg/authorizer/builder)
+- [request signer](https://godoc.org/github.com/nordcloud/cognito-authorizer/pkg/request/auth)
+
 
 ### About resource server context
 You can pass a context created by your custom authorizer to the resource server. This is done by satisfying ContextBuilder interface. The method should return a `map[string]interface{}` (this is how AWS golang SDK works) but keys and values in this map have to be *strings*. More info [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-authorizer-output.html).
