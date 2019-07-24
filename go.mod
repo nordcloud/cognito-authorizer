@@ -1,6 +1,6 @@
 module github.com/nordcloud/cognito-authorizer
 
-go 1.12
+go 1.11
 
 require (
 	github.com/aws/aws-lambda-go v1.9.0

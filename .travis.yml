@@ -1,9 +1,8 @@
 language: go
 
 go:
- - 1.x
+ - 1.12
  - master
 
 script:
-  - go build
-  - go test -v ./...
+  - env GO111MODULE=on go test -v ./...
