@@ -1,7 +1,0 @@
-pipelines:
-  default:
-    - step:
-        name: Test
-        image: golang:1.11
-        script:
-          - make test
