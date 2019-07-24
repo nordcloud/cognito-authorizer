@@ -1,3 +1,5 @@
+ld Status](https://travis-ci.org/nordcloud/cognito-authorizer.svg?branch=master)](https://travis-ci.org/nordcloud/cognito-authorizer)
+
 # Cognito authorizer
 A golang packages that abstract out work with JSON web access/identity tokens for AWS API Gateway custom authorizer.
 
