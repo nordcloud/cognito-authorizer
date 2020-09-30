@@ -19,7 +19,10 @@ import (
 
 const GrantClientCredentials = "client_credentials"
 
-var cache *tokenCache
+var (
+	cachedToken *tokenCache
+	cachedSecretKey *string
+)
 
 type token struct {
 	AccessToken string `json:"access_token"`
@@ -36,7 +39,7 @@ type tokenCache struct {
 // It reads the Cognito App secret key from the SSM parameter store and uses it to create the Authorization token.
 // cognitoAPIURL is the URL configured in the Cognito Resource servers
 // clientID is the cognito app client ID
-// scope is the OAuth scope name withour the Api Url - it will be concatenated automatically
+// scope is the OAuth scope name without the API URL - it will be concatenated automatically
 type CognitoM2MAuthorizer struct {
 	CognitoAPIURL string
 	ClientID      string
@@ -69,6 +72,9 @@ func (s *CognitoM2MAuthorizer) AddAuthorizationHeader(headerAdder HeaderAdder) e
 // GetSecretKey retrieves an secret API key from SSM parameter store using provided parameter name.
 // It returns the API key value, SSM parameter version and an error if any occurred.
 func (s *CognitoM2MAuthorizer) getSecretKey() (*string, error) {
+	if cachedSecretKey != nil {
+		return cachedSecretKey, nil
+	}
 	input := ssm.GetParameterInput{
 		Name:           &s.SsmSecretName,
 		WithDecryption: aws.Bool(true),
@@ -78,6 +84,7 @@ func (s *CognitoM2MAuthorizer) getSecretKey() (*string, error) {
 		log.WithError(err).WithField("ssmSecretName", s.SsmSecretName).Error("Failed to get secret API key from SSM")
 		return nil, errors.Wrap(err, "Failed to get secret API key from SSM")
 	}
+	cachedSecretKey = param.Parameter.Value
 
 	return param.Parameter.Value, nil
 }
@@ -137,18 +144,18 @@ func buildAuthHeader(clientID, secret string) string {
 }
 
 func getTokenFromCache() *string {
-	if cache == nil || cache.token == nil {
+	if cachedToken == nil || cachedToken.token == nil {
 		return nil
 	}
 
-	if cache.timestamp.Add(time.Duration(cache.token.ExpiresIn-5) * time.Second).Before(time.Now()) {
+	if cachedToken.timestamp.Add(time.Duration(cachedToken.token.ExpiresIn-5) * time.Second).Before(time.Now()) {
 		return nil
 	}
-	return &cache.token.AccessToken
+	return &cachedToken.token.AccessToken
 }
 
 func saveTokenInCache(token *token) {
-	cache = &tokenCache{
+	cachedToken = &tokenCache{
 		token:     token,
 		timestamp: time.Now(),
 	}
