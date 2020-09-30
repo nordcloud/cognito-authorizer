@@ -50,10 +50,10 @@ func Test_saveTokenInCache(t *testing.T) {
 		TokenType:   "B",
 	}
 
-	cache = nil
+	cachedToken = nil
 	saveTokenInCache(token)
-	assert.NotNil(t, cache)
-	assert.Equal(t, token, cache.token)
+	assert.NotNil(t, cachedToken)
+	assert.Equal(t, token, cachedToken.token)
 }
 
 func Test_buildAuthHeader(t *testing.T) {
@@ -79,7 +79,7 @@ func Test_getTokenFromCache(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cache = tt.testCache
+			cachedToken = tt.testCache
 
 			got := getTokenFromCache()
 			if tt.want != nil {
@@ -94,7 +94,7 @@ func Test_getTokenFromCache(t *testing.T) {
 func TestCognitoM2MSigner_getCognitoToken(t *testing.T) {
 	testSecret := "897wgagf97w9f"
 	testToken := fmt.Sprintf("{\"access_token\": \"%s\"}, \"expires_in\": 3000}", tokenValue)
-	cache = nil
+	cachedToken = nil
 
 	signer := &CognitoM2MAuthorizer{
 		CognitoAPIURL: testCognitoURL,
@@ -167,25 +167,14 @@ func TestCognitoM2MSigner_getSecretKey(t *testing.T) {
 		SsmSecretName: testSecretName,
 	}
 
-	tests := []struct {
-		name    string
-		want    *string
-		wantErr bool
-	}{
+	tests := []getSecretKeyTestCase{
 		{name: "GetSSMErr", want: nil, wantErr: true},
 		{name: "GetSSMOk", want: &secret, wantErr: false},
+		{name: "GetSecretCachedInPrevSSMCall", want: &secret, readFromCache: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockSSM := &MockedSSM{}
-			if tt.wantErr {
-				mockSSM.On("GetParameter", mock.Anything).Return(nil, errors.New("err"))
-			} else {
-				mockSSM.On("GetParameter", &ssm.GetParameterInput{
-					Name:           &signer.SsmSecretName,
-					WithDecryption: aws.Bool(true),
-				}).Return(&ssm.GetParameterOutput{Parameter: &ssm.Parameter{Value: &secret}}, nil)
-			}
+			mockSSM := mockSSMCall(tt, signer.SsmSecretName)
 			signer.SsmClient = mockSSM
 
 			got, err := signer.getSecretKey()
@@ -198,4 +187,27 @@ func TestCognitoM2MSigner_getSecretKey(t *testing.T) {
 			}
 		})
 	}
+}
+
+type getSecretKeyTestCase struct {
+	name    string
+	want    *string
+	wantErr bool
+	readFromCache bool
+}
+
+func mockSSMCall(testCase getSecretKeyTestCase, ssmSecretName string) *MockedSSM {
+	ssmMock := new(MockedSSM)
+	if testCase.readFromCache {
+		return ssmMock
+	}
+	if testCase.wantErr {
+		ssmMock.On("GetParameter", mock.Anything).Return(nil, errors.New("err"))
+		return ssmMock
+	}
+	ssmMock.On("GetParameter", &ssm.GetParameterInput{
+		Name:           &ssmSecretName,
+		WithDecryption: aws.Bool(true),
+	}).Return(&ssm.GetParameterOutput{Parameter: &ssm.Parameter{Value: &secret}}, nil)
+	return ssmMock
 }
