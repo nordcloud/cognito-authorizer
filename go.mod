@@ -1,4 +1,4 @@
-module github.com/nordcloud/cognito-authorizer
+module github.com/sijmenaukema/cognito-authorizer/pkg/authorizer
 
 go 1.11
 
