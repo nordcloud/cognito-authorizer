@@ -14,7 +14,7 @@ import (
 	"math/big"
 	"net/http"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // BaseTokenClaims is a common structure for token data.
